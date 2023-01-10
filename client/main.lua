@@ -37,47 +37,47 @@ AddEventHandler('ef-keys:client:notify', function(msg, type)
 end)
 
 
-RegisterNetEvent("ef-keys:client:givekeys")
-AddEventHandler("ef-keys:client:givekeys",function()
-    local playerPed = GetPlayerPed(-1)
+RegisterNetEvent('qb-vehiclekeys:client:GiveKeys', function(id)
+    local targetVehicle = GetVehicle()
 
-    local coords = GetEntityCoords(playerPed)
-
-    if IsPedInAnyVehicle(playerPed , false) then
-        vehicle = GetVehiclePedIsIn(playerPed, false)
-    else
-        vehicle = GetClosestVehicle(coords.x , coords.y , coords.z , 7.0 ,0 , 70)
-    end
-
-    local plate =  GetVehicleNumberPlateText(vehicle)
-    local vehicleprop = QBCore.Functions.GetVehicleProperties(vehicle)
-
-
-    closestpl = QBCore.Functions.GetClosestPlayer(coords)
-
-    -- debugging shit wtf
-    print(plate)
-    print(vehicleprop)
-    print(coords)
-    print(playerPed)
-    print(closestpl)
-
-
-
-    TriggerServerEvent("ef-keys:server:requestplayercars",function(isOwnedVehicle)
-    if not isOwnedVehicle then
-        TriggerEvent("ef-keys:client:notify","nu e masina ta golane","error")
-    elseif isOwnedVehicle then
-        local closestPlayer, distance = QBCore.Functions.GetClosestPlayer(coords)
-
-    if closestPlayer == -1 or distance > 3.0 then
-        TriggerEvent("ef-keys:client:notify","Nu este nimeni in jurul tau","error")
-    else
-        TriggerEvent("ef-keys:client:notify","Ti-ai dat cheia de la masina cu numarul de inmatriculare ~g~"..vehicleprop.plate.."","succes")
-        TriggerEvent()
-    end
+    if targetVehicle then
+        local targetPlate = QBCore.Functions.GetPlate(targetVehicle)
+        if HasKeys(targetPlate) then
+            if id and type(id) == "number" then -- Give keys to specific ID
+                GiveKeys(id, targetPlate)
+            else
+                if IsPedSittingInVehicle(PlayerPedId(), targetVehicle) then -- Give keys to everyone in vehicle
+                    local otherOccupants = GetOtherPlayersInVehicle(targetVehicle)
+                    for p=1,#otherOccupants do
+                        TriggerServerEvent('qb-vehiclekeys:server:GiveVehicleKeys', GetPlayerServerId(NetworkGetPlayerIndexFromPed(otherOccupants[p])), targetPlate)
+                    end
+                else -- Give keys to closest player
+                    GiveKeys(GetPlayerServerId(QBCore.Functions.GetClosestPlayer()), targetPlate)
+                end
+            end
+        else
+            QBCore.Functions.Notify(Lang:t("notify.ydhk"), 'error')
         end
-    end, GetVehicleNumberPlateText(vehicle))
-
+    end
 end)
 
+
+function GiveKeys(id, plate)
+    local distance = #(GetEntityCoords(PlayerPedId()) - GetEntityCoords(GetPlayerPed(GetPlayerFromServerId(id))))
+    if distance < 1.5 and distance > 0.0 then
+        TriggerServerEvent('qb-vehiclekeys:server:GiveVehicleKeys', id, plate)
+    else
+        QBCore.Functions.Notify(("No one near you"),'error')
+    end
+end
+
+function GetKeys()
+    QBCore.Functions.TriggerCallback('qb-vehiclekeys:server:GetVehicleKeys', function(keysList)
+        KeysList = keysList
+    end)
+end
+
+function HasKeys(plate)
+    return KeysList[plate]
+end
+exports('HasKeys', HasKeys)
