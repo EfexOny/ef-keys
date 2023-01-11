@@ -37,37 +37,36 @@ AddEventHandler('ef-keys:client:notify', function(msg, type)
 end)
 
 
-RegisterNetEvent('qb-vehiclekeys:client:GiveKeys', function(id)
-    local targetVehicle = GetVehicle()
+RegisterNetEvent('ef-keys:client:givekeys', function(id)
 
+    local coords = GetEntityCoords(PlayerPedId())
+    local targetVehicle, distance = QBCore.Functions.GetClosestVehicle(coords)
+
+    -- local targetVehicle = GetVehiclePedIsIn()
+
+    print(targetVehicle)
+    print(coords)
     if targetVehicle then
         local targetPlate = QBCore.Functions.GetPlate(targetVehicle)
-        if HasKeys(targetPlate) then
-            if id and type(id) == "number" then -- Give keys to specific ID
-                GiveKeys(id, targetPlate)
-            else
+        print(targetPlate)
                 if IsPedSittingInVehicle(PlayerPedId(), targetVehicle) then -- Give keys to everyone in vehicle
                     local otherOccupants = GetOtherPlayersInVehicle(targetVehicle)
                     for p=1,#otherOccupants do
-                        TriggerServerEvent('qb-vehiclekeys:server:GiveVehicleKeys', GetPlayerServerId(NetworkGetPlayerIndexFromPed(otherOccupants[p])), targetPlate)
+                        TriggerServerEvent('ef-keys:server:GiveVehicleKeys', GetPlayerServerId(NetworkGetPlayerIndexFromPed(otherOccupants[p])), targetPlate)
                     end
-                else -- Give keys to closest player
+                else 
                     GiveKeys(GetPlayerServerId(QBCore.Functions.GetClosestPlayer()), targetPlate)
                 end
             end
-        else
-            QBCore.Functions.Notify(Lang:t("notify.ydhk"), 'error')
-        end
-    end
-end)
-
+        end)
 
 function GiveKeys(id, plate)
     local distance = #(GetEntityCoords(PlayerPedId()) - GetEntityCoords(GetPlayerPed(GetPlayerFromServerId(id))))
     if distance < 1.5 and distance > 0.0 then
-        TriggerServerEvent('qb-vehiclekeys:server:GiveVehicleKeys', id, plate)
+        TriggerServerEvent('ef-keys:server:GiveVehicleKeys', id, plate)
     else
         QBCore.Functions.Notify(("No one near you"),'error')
+        print(targetPlate)
     end
 end
 

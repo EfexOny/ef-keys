@@ -1,4 +1,4 @@
-RegisterNetEvent('qb-vehiclekeys:server:GiveVehicleKeys', function(receiver, plate)
+RegisterNetEvent('ef-keys:server:GiveVehicleKeys', function(receiver, plate)
     local giver = source
 
     if HasKeys(giver, plate) then
@@ -14,3 +14,11 @@ RegisterNetEvent('qb-vehiclekeys:server:GiveVehicleKeys', function(receiver, pla
         TriggerClientEvent('QBCore:Notify', giver, Lang:t("notify.ydhk"), "error")
     end
 end)
+
+function HasKeys(id, plate)
+    local citizenid = QBCore.Functions.GetPlayer(id).PlayerData.citizenid
+    if VehicleList[plate] and VehicleList[plate][citizenid] then
+        return true
+    end
+    return false
+end
