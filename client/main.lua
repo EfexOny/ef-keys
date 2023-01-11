@@ -1,10 +1,20 @@
+local KeysList = {}
+
+
 Citizen.CreateThread(function()
     -- PlayerData management
     local PlayerData = QBCore.Functions.GetPlayerData()
 
+    AddEventHandler('onResourceStart', function(resourceName)
+        if resourceName == GetCurrentResourceName() and QBCore.Functions.GetPlayerData() ~= {} then
+            GetKeys()
+        end
+    end)
+    
+
     RegisterNetEvent("QBCore:Client:OnPlayerLoaded")
     AddEventHandler("QBCore:Client:OnPlayerLoaded", function()
-        PlayerData = QBCore.Functions.GetPlayerData()
+        GetKeys()
     end)
 
     RegisterNetEvent("QBCore:Client:OnPlayerUnload")
@@ -42,13 +52,20 @@ RegisterNetEvent('ef-keys:client:givekeys', function(id)
     local coords = GetEntityCoords(PlayerPedId())
     local targetVehicle, distance = QBCore.Functions.GetClosestVehicle(coords)
 
-    -- local targetVehicle = GetVehiclePedIsIn()
+    local plate = GetVehicleNumberPlateText(targetVehicle)
+	local vehicleProps = QBCore.Functions.GetVehicleProperties(targetVehicle)
+
+
+
+    QBCore.Functions.TriggerCallback("ef-keys:server:checkplayerowned", function(playerOwned)
+        print(playerOwned)
+    end)
+
 
     print(targetVehicle)
     print(coords)
     if targetVehicle then
         local targetPlate = QBCore.Functions.GetPlate(targetVehicle)
-        print(targetPlate)
                 if IsPedSittingInVehicle(PlayerPedId(), targetVehicle) then -- Give keys to everyone in vehicle
                     local otherOccupants = GetOtherPlayersInVehicle(targetVehicle)
                     for p=1,#otherOccupants do
@@ -59,6 +76,9 @@ RegisterNetEvent('ef-keys:client:givekeys', function(id)
                 end
             end
         end)
+    
+
+
 
 function GiveKeys(id, plate)
     local distance = #(GetEntityCoords(PlayerPedId()) - GetEntityCoords(GetPlayerPed(GetPlayerFromServerId(id))))
@@ -66,12 +86,11 @@ function GiveKeys(id, plate)
         TriggerServerEvent('ef-keys:server:GiveVehicleKeys', id, plate)
     else
         QBCore.Functions.Notify(("No one near you"),'error')
-        print(targetPlate)
     end
 end
 
 function GetKeys()
-    QBCore.Functions.TriggerCallback('qb-vehiclekeys:server:GetVehicleKeys', function(keysList)
+    QBCore.Functions.TriggerCallback('ef-keys:server:getvehiclekeys', function(keysList)
         KeysList = keysList
     end)
 end
