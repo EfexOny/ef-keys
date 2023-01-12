@@ -47,35 +47,39 @@ AddEventHandler('ef-keys:client:notify', function(msg, type)
 end)
 
 
-RegisterNetEvent('ef-keys:client:givekeys', function(id)
+RegisterNetEvent('ef-keys:client:closestveh')
+AddEventHandler('ef-keys:client:closestveh', function()
+    
+    coords = GetEntityCoords(PlayerPedId())
 
+    targetVehicle, distance = QBCore.Functions.GetClosestVehicle(coords)
+
+    plateveh = GetVehicleNumberPlateText(targetVehicle)
+end)
+
+
+
+RegisterNetEvent('ef-keys:client:givekeys', function(id)
     local coords = GetEntityCoords(PlayerPedId())
     local targetVehicle, distance = QBCore.Functions.GetClosestVehicle(coords)
-
-    local plate = GetVehicleNumberPlateText(targetVehicle)
-	local vehicleProps = QBCore.Functions.GetVehicleProperties(targetVehicle)
-
-
-
-    QBCore.Functions.TriggerCallback("ef-keys:server:checkplayerowned", function(playerOwned)
-        print(playerOwned)
-    end)
-
-
-    print(targetVehicle)
-    print(coords)
-    if targetVehicle then
-        local targetPlate = QBCore.Functions.GetPlate(targetVehicle)
-                if IsPedSittingInVehicle(PlayerPedId(), targetVehicle) then -- Give keys to everyone in vehicle
-                    local otherOccupants = GetOtherPlayersInVehicle(targetVehicle)
-                    for p=1,#otherOccupants do
-                        TriggerServerEvent('ef-keys:server:GiveVehicleKeys', GetPlayerServerId(NetworkGetPlayerIndexFromPed(otherOccupants[p])), targetPlate)
-                    end
-                else 
-                    GiveKeys(GetPlayerServerId(QBCore.Functions.GetClosestPlayer()), targetPlate)
+    local plateveh = GetVehicleNumberPlateText(targetVehicle)
+    QBCore.Functions.TriggerCallback("ef-keys:requestPlayerCars", function(result)
+        if targetVehicle and result then
+            local targetPlate = QBCore.Functions.GetPlate(targetVehicle)
+            if IsPedSittingInVehicle(PlayerPedId(), targetVehicle) then -- Give keys to everyone in vehicle
+                local otherOccupants = GetOtherPlayersInVehicle(targetVehicle)
+                for p = 1, #otherOccupants do
+                    TriggerServerEvent('ef-keys:server:GiveVehicleKeys',
+                        GetPlayerServerId(NetworkGetPlayerIndexFromPed(otherOccupants[p])), targetPlate)
                 end
+            else
+                GiveKeys(GetPlayerServerId(QBCore.Functions.GetClosestPlayer()), targetPlate)
             end
-        end)
+        else
+            QBCore.Functions.Notify(("Not your car homie"),'error')
+        end
+    end, plateveh)
+end)
     
 
 

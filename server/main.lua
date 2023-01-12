@@ -48,3 +48,30 @@ function HasKeys(id, plate)
     end
     return false
 end
+
+
+QBCore.Functions.CreateCallback('ef-keys:requestPlayerCars', function(source, cb, plateveh)
+    local ply = QBCore.Functions.GetPlayer(source)
+
+    MySQL.Async.fetchAll(
+        'SELECT plate FROM player_vehicles WHERE citizenid = @citizenid AND plate = @plate',
+        {
+            ['@citizenid'] = ply.PlayerData.citizenid,
+            ['@plate'] = plateveh,
+        },
+        function(result)
+            print(#result)
+            for i = 1, #result, 1 do
+                print(result[i].plate, plateveh)
+                if result[i].plate == plateveh then
+                    print('found')
+                    cb(true)
+                    return
+                end
+            end
+
+            print(plateveh, 'not found')
+            cb(false)
+        end
+    )
+end)
