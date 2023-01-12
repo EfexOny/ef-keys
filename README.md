@@ -21,6 +21,3 @@ You can add this to your `qb-radialmenu` line 295
 
 
 
-## TO-DO
-
-- Check if you own the vehicle before giving the keys
